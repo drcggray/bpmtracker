@@ -107,12 +107,18 @@
         return { error: 'GetSongBPM API Key is not configured' };
       }
 
-      const cleanedTrackName = cleanTrackTitle(trackName);
-      // For type=song, lookup is just the cleaned song title, with spaces replaced by '+'
-      const lookupParamValue = cleanedTrackName.replace(/ /g, '+');
+      const cleanedTrackName = cleanTrackTitle(trackName); // Keep using the cleaned title
+
+      // Prepare track and artist names for the API: replace spaces with '+'
+      const trackNameForApi = cleanedTrackName.replace(/ /g, '+');
+      const artistNameForApi = artistName.replace(/ /g, '+'); // Assuming artistName is just primary artist
+
+      // For type=both, construct lookup as song:TITLE+artist:ARTIST
+      const lookupParamValue = `song:${trackNameForApi}+artist:${artistNameForApi}`;
       
-      console.log(`[GetSongBPM] Fetching BPM for: Original: "${trackName}" by "${artistName}". Cleaned: "${cleanedTrackName}". Lookup: "${lookupParamValue}"`);
-      const fullPath = `/search/?api_key=${getSongBpmApiKey}&type=song&limit=1&lookup=${lookupParamValue}`;
+      console.log(`[GetSongBPM] Fetching BPM using type=both for: Original: "${trackName}" by "${artistName}". Cleaned: "${cleanedTrackName}". Artist for API: "${artistNameForApi}". Lookup: "${lookupParamValue}"`);
+      // Use type=both in the API path
+      const fullPath = `/search/?api_key=${getSongBpmApiKey}&type=both&limit=1&lookup=${lookupParamValue}`;
       console.log(`[GetSongBPM] Requesting Path: https://api.getsong.co${fullPath}`);
 
       return new Promise((resolve) => {
