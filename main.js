@@ -55,16 +55,17 @@
         return { error: 'GetSongBPM API Key is not configured' };
       }
 
-      const lookupQuery = `song:${encodeURIComponent(trackName)} artist:${encodeURIComponent(artistName)}`;
-      const apiUrl = `https://api.getsong.co/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${lookupQuery}`;
+      // Construct the raw value for the 'lookup' parameter
+      const rawLookupValue = `song:${trackName} artist:${artistName}`;
       
       console.log(`[GetSongBPM] Fetching BPM for: ${trackName} - ${artistName}`);
-      // console.log(`[GetSongBPM] API URL: ${apiUrl}`); // For debugging, can be noisy
+      // console.log(`[GetSongBPM] Raw lookup value: ${rawLookupValue}`); // For debugging
 
       return new Promise((resolve) => {
         const options = {
           hostname: 'api.getsong.co',
-          path: `/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${lookupQuery}`,
+          // Ensure the entire lookup value is URI encoded
+          path: `/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${encodeURIComponent(rawLookupValue)}`,
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
