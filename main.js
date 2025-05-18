@@ -59,13 +59,14 @@
       const rawLookupValue = `song:${trackName} artist:${artistName}`;
       
       console.log(`[GetSongBPM] Fetching BPM for: ${trackName} - ${artistName}`);
-      // console.log(`[GetSongBPM] Raw lookup value: ${rawLookupValue}`); // For debugging
+      const fullPath = `/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${encodeURIComponent(rawLookupValue)}`;
+      console.log(`[GetSongBPM] Requesting Path: https://api.getsong.co${fullPath}`); // Log the full URL
 
       return new Promise((resolve) => {
         const options = {
           hostname: 'api.getsong.co',
           // Ensure the entire lookup value is URI encoded
-          path: `/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${encodeURIComponent(rawLookupValue)}`,
+          path: fullPath,
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
