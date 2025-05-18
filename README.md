@@ -17,3 +17,6 @@ The functionality to display BPM (Beats Per Minute) for tracks is currently **no
 *   If BPM data is critical, alternative third-party music analysis APIs would need to be investigated and integrated, which would be a significant architectural change.
 
 This note is intended to prevent future development efforts from being spent on troubleshooting access to the deprecated `/v1/audio-features/{id}` endpoint without awareness of its current status.
+
+---
+BPM data powered by [GetSongBPM.com](https://getsongbpm.com)
