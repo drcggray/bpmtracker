@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://i.scdn.co data:;">
+  <title>Spotify BPM Viewer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Spotify BPM Viewer</h1>
+
+  <button id="login-button">Login with Spotify</button>
+  
+  <div id="current-song-info">
+    <h2>Currently Playing:</h2>
+    <p>Song: <span id="current-song-name">--</span></p>
+    <p>Artist: <span id="current-song-artist">--</span></p>
+    <p>BPM: <span id="current-song-bpm">--</span></p>
+  </div>
+
+  <div id="next-song-info">
+    <h2>Up Next:</h2>
+    <p>Song: <span id="next-song-name">--</span></p>
+    <p>Artist: <span id="next-song-artist">--</span></p>
+    <p>BPM: <span id="next-song-bpm">--</span></p>
+  </div>
+
+  <!-- We will load our renderer script here -->
+  <script src="./renderer.js"></script>
+</body>
+</html>
