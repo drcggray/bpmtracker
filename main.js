@@ -68,6 +68,34 @@
     let mainWindow = null;
     let server;
 
+    // --- Helper function to clean track titles ---
+    function cleanTrackTitle(title) {
+      if (!title) return '';
+      let cleanedTitle = title;
+      // Remove content in parentheses (e.g., "feat. Artist", "Remastered 2011", "Live at Wembley")
+      cleanedTitle = cleanedTitle.replace(/\s*\(.*?\)\s*/g, ' ').trim();
+      // Remove content in square brackets (e.g., "[Bonus Track]")
+      cleanedTitle = cleanedTitle.replace(/\s*\[.*?\]\s*/g, ' ').trim();
+      // Remove common suffixes like "- Remastered", "- Live Version", etc.
+      // Order matters here: longer, more specific patterns first
+      const suffixesToRemove = [
+        '- Remastered Version', '- Remastered', 
+        '- Live Version', '- Live', 
+        '- Radio Edit', '- Single Version', 
+        '- Acoustic Version', '- Acoustic',
+        '- Bonus Track'
+        // Add more suffixes if needed
+      ];
+      suffixesToRemove.forEach(suffix => {
+        if (cleanedTitle.toLowerCase().endsWith(suffix.toLowerCase())) {
+          cleanedTitle = cleanedTitle.substring(0, cleanedTitle.length - suffix.length);
+        }
+      });
+      cleanedTitle = cleanedTitle.trim();
+      // If the title became empty, revert to original to avoid issues
+      return cleanedTitle.length > 0 ? cleanedTitle : title;
+    }
+
     // --- GetSongBPM API Call Function ---
     async function fetchBpmFromGetSongBpm(trackName, artistName) {
       if (!trackName || !artistName) {
@@ -79,11 +107,12 @@
         return { error: 'GetSongBPM API Key is not configured' };
       }
 
-      // For type=song, lookup is just the song title, with spaces replaced by '+'
-      const lookupParamValue = trackName.replace(/ /g, '+');
+      const cleanedTrackName = cleanTrackTitle(trackName);
+      // For type=song, lookup is just the cleaned song title, with spaces replaced by '+'
+      const lookupParamValue = cleanedTrackName.replace(/ /g, '+');
       
-      console.log(`[GetSongBPM] Fetching BPM for: "${trackName}" by "${artistName}" (using lookup: "${lookupParamValue}")`);
-      const fullPath = `/search/?api_key=${getSongBpmApiKey}&type=song&limit=1&lookup=${lookupParamValue}`; // Use key from config
+      console.log(`[GetSongBPM] Fetching BPM for: Original: "${trackName}" by "${artistName}". Cleaned: "${cleanedTrackName}". Lookup: "${lookupParamValue}"`);
+      const fullPath = `/search/?api_key=${getSongBpmApiKey}&type=song&limit=1&lookup=${lookupParamValue}`;
       console.log(`[GetSongBPM] Requesting Path: https://api.getsong.co${fullPath}`);
 
       return new Promise((resolve) => {
