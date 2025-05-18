@@ -55,18 +55,20 @@
         return { error: 'GetSongBPM API Key is not configured' };
       }
 
-      // Construct the raw value for the 'lookup' parameter
-      const rawLookupValue = `song:${trackName} artist:${artistName}`;
+      // Prepare track and artist names for the API: replace spaces with '+'
+      const trackNameForApi = trackName.replace(/ /g, '+');
+      const artistNameForApi = artistName.replace(/ /g, '+');
+      // Construct the lookup parameter value as per GetSongBPM example format
+      const lookupParamValue = `song:${trackNameForApi} artist:${artistNameForApi}`;
       
       console.log(`[GetSongBPM] Fetching BPM for: ${trackName} - ${artistName}`);
-      const fullPath = `/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${encodeURIComponent(rawLookupValue)}`;
+      const fullPath = `/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${lookupParamValue}`; // Use the directly constructed value
       console.log(`[GetSongBPM] Requesting Path: https://api.getsong.co${fullPath}`); // Log the full URL
 
       return new Promise((resolve) => {
         const options = {
           hostname: 'api.getsong.co',
-          // Ensure the entire lookup value is URI encoded
-          path: fullPath,
+          path: fullPath, // Path now uses lookupParamValue which has '+' for spaces
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
