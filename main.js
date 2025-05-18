@@ -13,25 +13,34 @@
 
     // --- GetSongBPM API Configuration ---
     let getSongBpmApiKey = null;
+    let spotifyClientId = null;
+    let spotifyClientSecret = null;
+
     try {
       const configPath = path.join(__dirname, 'config.json');
       if (fs.existsSync(configPath)) {
-        const configFile = fs.readFileSync(configPath);
+        const configFile = fs.readFileSync(configPath, 'utf-8');
         const config = JSON.parse(configFile);
         getSongBpmApiKey = config.getSongBpmApiKey;
+        spotifyClientId = config.spotifyClientId;
+        spotifyClientSecret = config.spotifyClientSecret;
+      } else {
+        console.error('[CONFIG] config.json file not found. Please create it with your API keys.');
       }
     } catch (error) {
       console.error('[CONFIG] Error reading or parsing config.json:', error);
     }
 
     if (!getSongBpmApiKey) {
-      console.error('[CONFIG] GetSongBPM API Key is not configured in config.json or config.json is missing/invalid. BPM feature will be disabled.');
-      // You could also inform the renderer process to display a message to the user
+      console.error('[CONFIG] GetSongBPM API Key is not configured in config.json. BPM feature may be disabled.');
+    }
+    if (!spotifyClientId || !spotifyClientSecret) {
+      console.error('[CONFIG] Spotify Client ID or Secret is not configured in config.json. Spotify authentication will likely fail.');
     }
 
     // --- Spotify API Configuration ---
-    const SPOTIFY_CLIENT_ID = 'a8d0a630a81848498ca99a4e50b31150'; 
-    const SPOTIFY_CLIENT_SECRET = '79d7870f33414259999a0dc8df3f3c35'; // !!! George's actual secret is in his file !!!
+    // const SPOTIFY_CLIENT_ID = 'a8d0a630a81848498ca99a4e50b31150'; // Now read from config
+    // const SPOTIFY_CLIENT_SECRET = '79d7870f33414259999a0dc8df3f3c35'; // Now read from config
     const SPOTIFY_REDIRECT_URI = 'http://127.0.0.1:8888/callback';
 
     const userScopes = [ 
@@ -48,8 +57,8 @@
     ];
 
     const spotifyUserApi = new SpotifyWebApi({ 
-      clientId: SPOTIFY_CLIENT_ID,
-      clientSecret: SPOTIFY_CLIENT_SECRET,
+      clientId: spotifyClientId, // Use value from config
+      clientSecret: spotifyClientSecret, // Use value from config
       redirectUri: SPOTIFY_REDIRECT_URI,
     });
 

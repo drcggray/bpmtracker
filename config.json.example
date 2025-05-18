@@ -1,3 +1,5 @@
 {
-  "getSongBpmApiKey": "YOUR_API_KEY_HERE"
+  "getSongBpmApiKey": "YOUR_GETSONGBPM_API_KEY_HERE",
+  "spotifyClientId": "YOUR_SPOTIFY_CLIENT_ID_HERE",
+  "spotifyClientSecret": "YOUR_SPOTIFY_CLIENT_SECRET_HERE"
 }
