@@ -10,6 +10,10 @@
     const url = require('url');
     const SpotifyWebApi = require('spotify-web-api-node');
 
+    // --- GetSongBPM API Configuration ---
+    // !!! IMPORTANT: Store this securely, not hardcoded in production! We'll address this. !!!
+    const YOUR_GETSONGBPM_API_KEY = '2432d130cdb147058971604700f83e4e';
+
     // --- Spotify API Configuration ---
     const SPOTIFY_CLIENT_ID = 'a8d0a630a81848498ca99a4e50b31150'; 
     const SPOTIFY_CLIENT_SECRET = '79d7870f33414259999a0dc8df3f3c35'; // !!! George's actual secret is in his file !!!
@@ -39,6 +43,67 @@
     
     let mainWindow = null;
     let server;
+
+    // --- GetSongBPM API Call Function ---
+    async function fetchBpmFromGetSongBpm(trackName, artistName) {
+      if (!trackName || !artistName) {
+        console.warn('[GetSongBPM] Missing trackName or artistName');
+        return { error: 'Missing track or artist name for BPM lookup' };
+      }
+      if (!YOUR_GETSONGBPM_API_KEY) {
+        console.error('[GetSongBPM] API Key is missing!');
+        return { error: 'GetSongBPM API Key is not configured' };
+      }
+
+      const lookupQuery = `song:${encodeURIComponent(trackName)} artist:${encodeURIComponent(artistName)}`;
+      const apiUrl = `https://api.getsong.co/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${lookupQuery}`;
+      
+      console.log(`[GetSongBPM] Fetching BPM for: ${trackName} - ${artistName}`);
+      // console.log(`[GetSongBPM] API URL: ${apiUrl}`); // For debugging, can be noisy
+
+      return new Promise((resolve) => {
+        const options = {
+          hostname: 'api.getsong.co',
+          path: `/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${lookupQuery}`,
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'SpotifyBPMViewer/1.0' // Good practice to set a User-Agent
+          }
+        };
+
+        const req = https.request(options, (res) => {
+          let data = '';
+          res.on('data', (chunk) => { data += chunk; });
+          res.on('end', () => {
+            try {
+              if (res.statusCode === 200) {
+                const parsedData = JSON.parse(data);
+                if (parsedData.search && parsedData.search.length > 0 && parsedData.search[0].tempo) {
+                  const bpm = Math.round(parseFloat(parsedData.search[0].tempo));
+                  console.log(`[GetSongBPM] Success: Found BPM ${bpm} for ${trackName}`);
+                  resolve({ bpm });
+                } else {
+                  console.warn(`[GetSongBPM] BPM not found in response for ${trackName}:`, parsedData.search);
+                  resolve({ error: 'BPM not found in GetSongBPM response' });
+                }
+              } else {
+                console.error(`[GetSongBPM] Error: Status ${res.statusCode}`, data);
+                resolve({ error: { message: `GetSongBPM API error: ${res.statusCode}`, details: data, statusCode: res.statusCode } });
+              }
+            } catch (e) {
+              console.error('[GetSongBPM] Error parsing JSON:', e, "Raw data:", data);
+              resolve({ error: { message: 'Failed to parse response from GetSongBPM', details: e.message } });
+            }
+          });
+        });
+        req.on('error', (e) => {
+          console.error('[GetSongBPM] Request error:', e);
+          resolve({ error: { message: `Request failed for GetSongBPM: ${e.message}`, details: e.toString() } });
+        });
+        req.end();
+      });
+    }
     
     // --- Custom Spotify API Call Functions ---
     async function fetchSpotifyQueueDirectly() {
@@ -302,42 +367,45 @@
         
         if (!playbackState || !playbackState.item) { 
             console.log('[DEBUG] No item currently playing or playbackState is null/undefined (received from fetchCurrentlyPlayingDirectly).');
-            const result = { name: 'Nothing playing or private session.', artist: '', bpm: '', albumArt: null };
+            const result = { name: 'Nothing playing or private session.', artist: '', bpm: 'N/A', albumArt: null };
             console.log('[DEBUG] spotify:get-currently-playing NOTHING PLAYING, returning:', JSON.stringify(result, null, 2));
             return result;
         }
 
         if (playbackState.is_playing && playbackState.item) { 
           const track = playbackState.item;
-          let bpm = 'N/A';
-          const audioFeaturesResult = await getAudioFeaturesWithLibrary(track.id); // Original call
-          // const audioFeaturesResult = await fetchAudioFeaturesDirectly(track.id); // DIAGNOSTIC CALL
+          const trackName = track.name;
+          const mainArtistName = track.artists && track.artists.length > 0 ? track.artists[0].name : 'Unknown Artist';
           
-          if (audioFeaturesResult && !audioFeaturesResult.error && audioFeaturesResult.bpm) {
-            bpm = audioFeaturesResult.bpm; // Already rounded if successful
-          } else if (audioFeaturesResult && audioFeaturesResult.error) {
-            console.error(`Failed to fetch audio features for current track ${track.id} (via library):`, audioFeaturesResult.error); // Original log
-            // console.error(`[DIAGNOSTIC] Failed to fetch audio features for current track ${track.id} (DIRECTLY):`, audioFeaturesResult.error.details || audioFeaturesResult.error);
+          let bpm = 'N/A';
+          // Fetch BPM from GetSongBPM.com
+          const bpmResult = await fetchBpmFromGetSongBpm(trackName, mainArtistName);
+          if (bpmResult && bpmResult.bpm) {
+            bpm = bpmResult.bpm;
+          } else if (bpmResult && bpmResult.error) {
+            console.warn(`[GetSongBPM] Failed to get BPM for current track "${trackName}":`, bpmResult.error.message || bpmResult.error);
+          } else {
+            console.warn(`[GetSongBPM] No BPM data returned for current track "${trackName}"`);
           }
 
           const result = {
-            name: track.name,
+            name: trackName,
             artist: track.artists.map(artist => artist.name).join(', '),
             bpm: bpm, 
             albumArt: track.album && track.album.images && track.album.images.length > 0 ? track.album.images[0].url : null,
-            trackIdForBpm: track.id 
+            trackIdForBpm: track.id // Keep for potential future use, though not used for BPM now
           };
           console.log('[DEBUG] spotify:get-currently-playing SUCCESS, returning:', JSON.stringify(result, null, 2));
           return result;
         }
         
-        const defaultNothingPlayingResult = { name: 'Nothing actively playing.', artist: '', bpm: '', albumArt: null };
+        const defaultNothingPlayingResult = { name: 'Nothing actively playing.', artist: '', bpm: 'N/A', albumArt: null };
         console.log('[DEBUG] spotify:get-currently-playing UNHANDLED STATE or NOT IS_PLAYING, returning:', JSON.stringify(defaultNothingPlayingResult, null, 2), 'PlaybackState:', JSON.stringify(playbackState, null, 2));
         return defaultNothingPlayingResult;
 
       } catch (error) { 
         console.error('Error in spotify:get-currently-playing handler:', error);
-        const errorResult = { error: `Failed to fetch currently playing song: ${error.message}` };
+        const errorResult = { error: `Failed to fetch currently playing song: ${error.message}`, bpm: 'N/A' };
         console.log('[DEBUG] spotify:get-currently-playing ERROR, returning:', JSON.stringify(errorResult, null, 2));
         const statusCode = error.statusCode || (error.cause && error.cause.statusCode); 
         if (statusCode === 401 || (error.message && error.message.includes('401'))) {
@@ -361,23 +429,26 @@
         if (queueApiResponse && queueApiResponse.queue && queueApiResponse.queue.length > 0) {
           const nextTrackRaw = queueApiResponse.queue[0];
           if (nextTrackRaw.type === 'track') {
-            let bpm = 'N/A';
-            const audioFeaturesResult = await getAudioFeaturesWithLibrary(nextTrackRaw.id); // Original call
-            // const audioFeaturesResult = await fetchAudioFeaturesDirectly(nextTrackRaw.id); // DIAGNOSTIC CALL
+            const trackName = nextTrackRaw.name;
+            const mainArtistName = nextTrackRaw.artists && nextTrackRaw.artists.length > 0 ? nextTrackRaw.artists[0].name : 'Unknown Artist';
 
-            if (audioFeaturesResult && !audioFeaturesResult.error && audioFeaturesResult.bpm) {
-                bpm = audioFeaturesResult.bpm;
-            } else if (audioFeaturesResult && audioFeaturesResult.error) {
-                console.error(`Failed to fetch audio features for next track ${nextTrackRaw.id} (via library):`, audioFeaturesResult.error); // Original log
-                // console.error(`[DIAGNOSTIC] Failed to fetch audio features for next track ${nextTrackRaw.id} (DIRECTLY):`, audioFeaturesResult.error.details || audioFeaturesResult.error);
+            let bpm = 'N/A';
+            // Fetch BPM from GetSongBPM.com
+            const bpmResult = await fetchBpmFromGetSongBpm(trackName, mainArtistName);
+            if (bpmResult && bpmResult.bpm) {
+              bpm = bpmResult.bpm;
+            } else if (bpmResult && bpmResult.error) {
+              console.warn(`[GetSongBPM] Failed to get BPM for next track "${trackName}":`, bpmResult.error.message || bpmResult.error);
+            } else {
+              console.warn(`[GetSongBPM] No BPM data returned for next track "${trackName}"`);
             }
             
             return {
-              name: nextTrackRaw.name,
+              name: trackName,
               artist: nextTrackRaw.artists.map(artist => artist.name).join(', '),
               bpm: bpm, 
               albumArt: nextTrackRaw.album && nextTrackRaw.album.images && nextTrackRaw.album.images.length > 0 ? nextTrackRaw.album.images[0].url : null,
-              trackIdForBpm: nextTrackRaw.id,
+              trackIdForBpm: nextTrackRaw.id, // Keep for potential future use
             };
           }
         } else if (queueApiResponse && queueApiResponse.currently_playing && (!queueApiResponse.queue || queueApiResponse.queue.length === 0)) {
@@ -391,6 +462,6 @@
         if (statusCode === 401 || (error.message && error.message.includes('401'))) {
             if (mainWindow) mainWindow.webContents.send('spotify:auth-required');
         }
-        return { error: `Unexpected error in get-queue handler: ${error.message}` };
+        return { error: `Unexpected error in get-queue handler: ${error.message}`, bpm: 'N/A' };
       }
     });
