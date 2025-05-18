@@ -55,20 +55,17 @@
         return { error: 'GetSongBPM API Key is not configured' };
       }
 
-      // Prepare track and artist names for the API: replace spaces with '+'
-      const trackNameForApi = trackName.replace(/ /g, '+');
-      const artistNameForApi = artistName.replace(/ /g, '+');
-      // Construct the lookup parameter value as per GetSongBPM example format
-      const lookupParamValue = `song:${trackNameForApi} artist:${artistNameForApi}`;
+      // For type=song, lookup is just the song title, with spaces replaced by '+'
+      const lookupParamValue = trackName.replace(/ /g, '+');
       
-      console.log(`[GetSongBPM] Fetching BPM for: ${trackName} - ${artistName}`);
-      const fullPath = `/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${lookupParamValue}`; // Use the directly constructed value
-      console.log(`[GetSongBPM] Requesting Path: https://api.getsong.co${fullPath}`); // Log the full URL
+      console.log(`[GetSongBPM] Fetching BPM for: "${trackName}" by "${artistName}" (using lookup: "${lookupParamValue}")`);
+      const fullPath = `/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${lookupParamValue}`;
+      console.log(`[GetSongBPM] Requesting Path: https://api.getsong.co${fullPath}`);
 
       return new Promise((resolve) => {
         const options = {
           hostname: 'api.getsong.co',
-          path: fullPath, // Path now uses lookupParamValue which has '+' for spaces
+          path: fullPath,
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -83,15 +80,36 @@
             try {
               if (res.statusCode === 200) {
                 const parsedData = JSON.parse(data);
-                if (parsedData.search && parsedData.search.length > 0 && parsedData.search[0].tempo) {
-                  const bpm = Math.round(parseFloat(parsedData.search[0].tempo));
-                  console.log(`[GetSongBPM] Success: Found BPM ${bpm} for ${trackName}`);
-                  resolve({ bpm });
-                } else {
-                  console.warn(`[GetSongBPM] BPM not found in response for ${trackName}:`, parsedData.search);
-                  resolve({ error: 'BPM not found in GetSongBPM response' });
+                if (parsedData.search && parsedData.search.length > 0) {
+                  const foundSong = parsedData.search[0];
+                  // Ideally, we'd check if foundSong.artist.name closely matches artistName.
+                  // For now, with limit=1, we'll take the tempo if the primary artist name is present and somewhat matches.
+                  if (foundSong.tempo) {
+                    let artistMatchQuality = 'none';
+                    if (foundSong.artist && foundSong.artist.name) {
+                      if (foundSong.artist.name.toLowerCase() === artistName.toLowerCase()) {
+                        artistMatchQuality = 'exact';
+                      } else if (foundSong.artist.name.toLowerCase().includes(artistName.toLowerCase()) || artistName.toLowerCase().includes(foundSong.artist.name.toLowerCase())) {
+                        artistMatchQuality = 'partial';
+                      }
+                    }
+                    
+                    const bpm = Math.round(parseFloat(foundSong.tempo));
+                    console.log(`[GetSongBPM] Success: Found BPM ${bpm} for "${foundSong.title}" by "${foundSong.artist ? foundSong.artist.name : 'Unknown Artist'}". Artist match: ${artistMatchQuality}.`);
+                    resolve({ bpm });
+                  } else {
+                    console.warn(`[GetSongBPM] Song found for "${trackName}" ("${foundSong.title}"), but no tempo data.`);
+                    resolve({ error: 'Song found, but no tempo data in GetSongBPM response' });
+                  }
+                } else { // No search results array or it's empty
+                  console.warn(`[GetSongBPM] No results found for lookup "${lookupParamValue}":`, parsedData.search || parsedData);
+                  resolve({ error: 'No results found in GetSongBPM response' });
                 }
-              } else {
+              } else if (parsedData && parsedData.error) { // Handle top-level error object from API
+                console.error(`[GetSongBPM] API returned error for "${lookupParamValue}": ${parsedData.error}`);
+                resolve({ error: `GetSongBPM API error: ${parsedData.error}` });
+              }
+              else {
                 console.error(`[GetSongBPM] Error: Status ${res.statusCode}`, data);
                 resolve({ error: { message: `GetSongBPM API error: ${res.statusCode}`, details: data, statusCode: res.statusCode } });
               }
