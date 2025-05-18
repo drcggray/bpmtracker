@@ -7,12 +7,27 @@
     const path = require('path');
     const http = require('http');
     const https = require('https'); 
+    const fs = require('fs'); // Added for reading config file
     const url = require('url');
     const SpotifyWebApi = require('spotify-web-api-node');
 
     // --- GetSongBPM API Configuration ---
-    // !!! IMPORTANT: Store this securely, not hardcoded in production! We'll address this. !!!
-    const YOUR_GETSONGBPM_API_KEY = '2432d130cdb147058971604700f83e4e';
+    let getSongBpmApiKey = null;
+    try {
+      const configPath = path.join(__dirname, 'config.json');
+      if (fs.existsSync(configPath)) {
+        const configFile = fs.readFileSync(configPath);
+        const config = JSON.parse(configFile);
+        getSongBpmApiKey = config.getSongBpmApiKey;
+      }
+    } catch (error) {
+      console.error('[CONFIG] Error reading or parsing config.json:', error);
+    }
+
+    if (!getSongBpmApiKey) {
+      console.error('[CONFIG] GetSongBPM API Key is not configured in config.json or config.json is missing/invalid. BPM feature will be disabled.');
+      // You could also inform the renderer process to display a message to the user
+    }
 
     // --- Spotify API Configuration ---
     const SPOTIFY_CLIENT_ID = 'a8d0a630a81848498ca99a4e50b31150'; 
@@ -50,8 +65,8 @@
         console.warn('[GetSongBPM] Missing trackName or artistName');
         return { error: 'Missing track or artist name for BPM lookup' };
       }
-      if (!YOUR_GETSONGBPM_API_KEY) {
-        console.error('[GetSongBPM] API Key is missing!');
+      if (!getSongBpmApiKey) { // Check the key read from config
+        console.error('[GetSongBPM] API Key is missing or not loaded from config.json!');
         return { error: 'GetSongBPM API Key is not configured' };
       }
 
@@ -59,7 +74,7 @@
       const lookupParamValue = trackName.replace(/ /g, '+');
       
       console.log(`[GetSongBPM] Fetching BPM for: "${trackName}" by "${artistName}" (using lookup: "${lookupParamValue}")`);
-      const fullPath = `/search/?api_key=${YOUR_GETSONGBPM_API_KEY}&type=song&limit=1&lookup=${lookupParamValue}`;
+      const fullPath = `/search/?api_key=${getSongBpmApiKey}&type=song&limit=1&lookup=${lookupParamValue}`; // Use key from config
       console.log(`[GetSongBPM] Requesting Path: https://api.getsong.co${fullPath}`);
 
       return new Promise((resolve) => {
