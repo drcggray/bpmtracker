@@ -18,6 +18,9 @@ contextBridge.exposeInMainWorld('spotify', {
   // Ask main process to get queue data
   getQueue: () => ipcRenderer.invoke('spotify:get-queue'),
   
+  // Ask main process to get lyrics for a song
+  getLyrics: (trackName, artistName) => ipcRenderer.invoke('spotify:get-lyrics', trackName, artistName),
+  
   // It's good practice to provide a way to remove listeners if the component using them is unmounted
   // For simplicity in this app, we might not need it if listeners are set up once.
   // removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),

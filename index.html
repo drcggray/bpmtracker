@@ -8,22 +8,36 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Spotify BPM Viewer</h1>
+  <div class="app-container">
+    <div class="main-content">
+      <div class="header-controls">
+        <h1>Spotify BPM Viewer</h1>
+        <button id="lyrics-toggle" class="lyrics-toggle-btn" title="Toggle lyrics display">Lyrics</button>
+      </div>
 
-  <button id="login-button">Login with Spotify</button>
-  
-  <div id="current-song-info">
-    <h2>Currently Playing:</h2>
-    <p>Song: <span id="current-song-name">--</span></p>
-    <p>Artist: <span id="current-song-artist">--</span></p>
-    <p>BPM: <span id="current-song-bpm">--</span></p>
-  </div>
+      <button id="login-button">Login with Spotify</button>
+      
+      <div id="current-song-info">
+        <h2>Currently Playing:</h2>
+        <p>Song: <span id="current-song-name">--</span></p>
+        <p>Artist: <span id="current-song-artist">--</span></p>
+        <p>BPM: <span id="current-song-bpm">--</span></p>
+      </div>
 
-  <div id="next-song-info">
-    <h2>Up Next:</h2>
-    <p>Song: <span id="next-song-name">--</span></p>
-    <p>Artist: <span id="next-song-artist">--</span></p>
-    <p>BPM: <span id="next-song-bpm">--</span></p>
+      <div id="next-song-info">
+        <h2>Up Next:</h2>
+        <p>Song: <span id="next-song-name">--</span></p>
+        <p>Artist: <span id="next-song-artist">--</span></p>
+        <p>BPM: <span id="next-song-bpm">--</span></p>
+      </div>
+    </div>
+
+    <div class="lyrics-panel" id="lyrics-panel">
+      <h2>Lyrics</h2>
+      <div class="lyrics-content" id="lyrics-content">
+        <p class="lyrics-placeholder">No song playing</p>
+      </div>
+    </div>
   </div>
 
   <!-- We will load our renderer script here -->

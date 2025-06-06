@@ -18,5 +18,9 @@ The functionality to display BPM (Beats Per Minute) for tracks is currently **no
 
 This note is intended to prevent future development efforts from being spent on troubleshooting access to the deprecated `/v1/audio-features/{id}` endpoint without awareness of its current status.
 
----
-BPM data powered by [GetSongBPM.com](https://getsongbpm.com)
+## Future Development Notes
+
+### Lyrics Feature Planning
+**Genius API Research Completed (May 2025):** Investigation into using Genius API as a replacement for GetSongBPM service revealed that while Genius API provides excellent song metadata and lyrics data, it does **not** include BPM/tempo information. The Genius API would be suitable for implementing a future lyrics display feature but cannot replace the current BPM data source.
+
+**Current Plan:** Continue using GetSongBPM.com API for tempo data while searching for alternative tempo/BPM API providers. Genius API integration will be considered for future lyrics display functionality.

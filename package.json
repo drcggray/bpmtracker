@@ -4,7 +4,9 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "debug": "electron debug-start.js",
+    "test": "cd tests && npm test",
+    "test:install": "cd tests && npm install"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +14,7 @@
   "description": "",
   "dependencies": {
     "electron": "^36.2.1",
+    "genius-lyrics-api": "^3.2.1",
     "spotify-web-api-node": "^5.0.2"
   }
 }

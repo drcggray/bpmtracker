@@ -6,6 +6,9 @@ console.log('renderer.js loaded, now with IPC capabilities.');
 const loginButton = document.getElementById('login-button');
 const currentSongInfoDiv = document.getElementById('current-song-info');
 const nextSongInfoDiv = document.getElementById('next-song-info');
+const lyricsPanel = document.getElementById('lyrics-panel');
+const lyricsContent = document.getElementById('lyrics-content');
+const lyricsToggleBtn = document.getElementById('lyrics-toggle');
 
 const currentSongNameEl = document.getElementById('current-song-name');
 const currentSongArtistEl = document.getElementById('current-song-artist');
@@ -31,6 +34,9 @@ nextSongInfoDiv.appendChild(nextSongArtEl);
 
 let isAuthenticated = false;
 let dataFetchInterval = null;
+let currentTrackName = null;
+let currentArtistName = null;
+let showLyrics = localStorage.getItem('showLyrics') !== 'false'; // Default to true
 
 function showLoginView() {
   loginButton.style.display = 'block';
@@ -66,6 +72,18 @@ async function fetchCurrentlyPlaying() {
       currentSongBpmEl.textContent = data.bpm ? `${data.bpm} BPM` : '--';
       currentSongArtEl.src = data.albumArt || '';
       currentSongArtEl.style.display = data.albumArt ? 'block' : 'none';
+      
+      // Fetch lyrics if the song has changed and lyrics panel is visible
+      if (data.name !== currentTrackName || data.artist !== currentArtistName) {
+        currentTrackName = data.name;
+        currentArtistName = data.artist;
+        // Only fetch lyrics if the panel is visible
+        if (showLyrics) {
+          // Extract just the first artist name for lyrics search
+          const firstArtist = data.artist ? data.artist.split(',')[0].trim() : '';
+          fetchLyrics(data.name, firstArtist);
+        }
+      }
     } else {
       console.error('Error fetching current song from main:', data ? data.error : 'Unknown error');
       currentSongNameEl.textContent = data && data.name ? data.name : 'Error or nothing playing'; // Display 'Nothing playing' if applicable
@@ -73,6 +91,14 @@ async function fetchCurrentlyPlaying() {
       currentSongBpmEl.textContent = '--';
       currentSongArtEl.src = '';
       currentSongArtEl.style.display = 'none';
+      
+      // Clear lyrics when nothing is playing
+      if (data && data.name === 'Nothing playing or private session.') {
+        currentTrackName = null;
+        currentArtistName = null;
+        lyricsContent.innerHTML = '<p class="lyrics-placeholder">No song playing</p>';
+      }
+      
       if (data && data.error === 'Not authenticated') showLoginView();
     }
   } catch (error) {
@@ -107,12 +133,61 @@ async function fetchQueue() {
   }
 }
 
+async function fetchLyrics(trackName, artistName) {
+  if (!trackName || !artistName) {
+    lyricsContent.innerHTML = '<p class="lyrics-placeholder">No song playing</p>';
+    return;
+  }
+  
+  // Show loading state
+  lyricsContent.innerHTML = '<p class="lyrics-loading">Loading lyrics...</p>';
+  
+  try {
+    const data = await window.spotify.getLyrics(trackName, artistName);
+    if (data && data.lyrics) {
+      // Format lyrics with proper line breaks
+      const formattedLyrics = data.lyrics.split('\n').map(line => line.trim()).join('\n');
+      lyricsContent.textContent = formattedLyrics;
+    } else if (data && data.error) {
+      console.warn('Lyrics error:', data.error);
+      lyricsContent.innerHTML = '<p class="lyrics-placeholder">Lyrics not available</p>';
+    } else {
+      lyricsContent.innerHTML = '<p class="lyrics-placeholder">Lyrics not available</p>';
+    }
+  } catch (error) {
+    console.error('Error fetching lyrics:', error);
+    lyricsContent.innerHTML = '<p class="lyrics-placeholder">Error loading lyrics</p>';
+  }
+}
+
+function toggleLyrics() {
+  showLyrics = !showLyrics;
+  
+  if (showLyrics) {
+    lyricsPanel.classList.remove('lyrics-hidden');
+    lyricsToggleBtn.classList.add('active');
+    // Fetch lyrics for current song if we have one
+    if (currentTrackName && currentArtistName) {
+      const firstArtist = currentArtistName.split(',')[0].trim();
+      fetchLyrics(currentTrackName, firstArtist);
+    }
+  } else {
+    lyricsPanel.classList.add('lyrics-hidden');
+    lyricsToggleBtn.classList.remove('active');
+  }
+  
+  // Save preference
+  localStorage.setItem('showLyrics', showLyrics);
+}
+
 function fetchAllSongData() {
   fetchCurrentlyPlaying();
   fetchQueue();
 }
 
 // --- Event Listeners ---
+lyricsToggleBtn.addEventListener('click', toggleLyrics);
+
 loginButton.addEventListener('click', async () => {
   console.log('Login button clicked');
   try {
@@ -146,6 +221,14 @@ window.spotify.onAuthRequired(() => {
 });
 
 // --- Initial Setup ---
+// Apply saved lyrics visibility preference
+if (!showLyrics) {
+  lyricsPanel.classList.add('lyrics-hidden');
+  lyricsToggleBtn.classList.remove('active');
+} else {
+  lyricsToggleBtn.classList.add('active');
+}
+
 // Determine initial view based on whether we might already be authenticated (e.g. if tokens were persisted)
 // For now, we always start with the login view until main process confirms auth.
 showLoginView(); 

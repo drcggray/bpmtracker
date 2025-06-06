@@ -1,5 +1,6 @@
 {
   "getSongBpmApiKey": "YOUR_GETSONGBPM_API_KEY_HERE",
   "spotifyClientId": "YOUR_SPOTIFY_CLIENT_ID_HERE",
-  "spotifyClientSecret": "YOUR_SPOTIFY_CLIENT_SECRET_HERE"
+  "spotifyClientSecret": "YOUR_SPOTIFY_CLIENT_SECRET_HERE",
+  "geniusApiKey": "YOUR_GENIUS_API_KEY_HERE"
 }
