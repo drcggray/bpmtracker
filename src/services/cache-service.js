@@ -6,12 +6,14 @@ class CacheService {
     this.caches = {
       lyrics: new Map(),
       bpm: new Map(),
-      tracks: new Map()
+      tracks: new Map(),
+      lastPlayed: new Map()
     };
     this.ttl = {
       lyrics: 24 * 60 * 60 * 1000, // 24 hours
       bpm: 7 * 24 * 60 * 60 * 1000, // 7 days
-      tracks: 5 * 60 * 1000 // 5 minutes
+      tracks: 5 * 60 * 1000, // 5 minutes
+      lastPlayed: 7 * 24 * 60 * 60 * 1000 // 7 days - persist across sessions
     };
   }
 

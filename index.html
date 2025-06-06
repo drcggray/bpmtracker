@@ -11,8 +11,11 @@
   <div class="app-container">
     <div class="main-content">
       <div class="header-controls">
-        <h1>Spotify BPM Viewer</h1>
-        <button id="lyrics-toggle" class="lyrics-toggle-btn" title="Toggle lyrics display">Lyrics</button>
+        <h1>George's Song Viewer</h1>
+        <div class="header-buttons">
+          <button id="theme-toggle" class="theme-toggle-btn" title="Toggle dark mode">🌙</button>
+          <button id="lyrics-toggle" class="lyrics-toggle-btn" title="Toggle lyrics display">Lyrics</button>
+        </div>
       </div>
 
       <button id="login-button">Login with Spotify</button>
@@ -40,6 +43,8 @@
     </div>
   </div>
 
+  <!-- Load theme manager first -->
+  <script src="./theme-renderer.js"></script>
   <!-- We will load our renderer script here -->
   <script src="./renderer.js"></script>
 </body>

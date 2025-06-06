@@ -9,6 +9,7 @@ const nextSongInfoDiv = document.getElementById('next-song-info');
 const lyricsPanel = document.getElementById('lyrics-panel');
 const lyricsContent = document.getElementById('lyrics-content');
 const lyricsToggleBtn = document.getElementById('lyrics-toggle');
+const themeToggleBtn = document.getElementById('theme-toggle');
 
 const currentSongNameEl = document.getElementById('current-song-name');
 const currentSongArtistEl = document.getElementById('current-song-artist');
@@ -67,14 +68,27 @@ async function fetchCurrentlyPlaying() {
     const data = await window.spotify.getCurrentlyPlaying();
     console.log('[DEBUG] Renderer received for current song:', JSON.stringify(data, null, 2)); // Added log
     if (data && !data.error) {
-      currentSongNameEl.textContent = data.name || '--';
+      // Show paused indicator if not playing
+      const pausedIndicator = data.is_playing === false ? ' ⏸️' : '';
+      currentSongNameEl.textContent = (data.name || '--') + pausedIndicator;
       currentSongArtistEl.textContent = data.artist || '--';
       currentSongBpmEl.textContent = data.bpm ? `${data.bpm} BPM` : '--';
       currentSongArtEl.src = data.albumArt || '';
       currentSongArtEl.style.display = data.albumArt ? 'block' : 'none';
       
+      // Add visual styling for paused state
+      if (data.is_playing === false) {
+        currentSongInfoDiv.style.opacity = '0.85';
+        currentSongInfoDiv.style.borderLeft = '4px solid var(--text-secondary)';
+      } else {
+        currentSongInfoDiv.style.opacity = '1';
+        currentSongInfoDiv.style.borderLeft = '4px solid var(--accent-primary)';
+      }
+      
       // Fetch lyrics if the song has changed and lyrics panel is visible
-      if (data.name !== currentTrackName || data.artist !== currentArtistName) {
+      // Only fetch new lyrics if it's actually a different song (not just a play/pause change)
+      if ((data.name !== currentTrackName || data.artist !== currentArtistName) && 
+          data.name && data.name !== '--' && data.name !== 'Nothing playing or private session.') {
         currentTrackName = data.name;
         currentArtistName = data.artist;
         // Only fetch lyrics if the panel is visible
@@ -218,6 +232,41 @@ window.spotify.onAuthRequired(() => {
   isAuthenticated = false;
   showLoginView();
   alert('Spotify authentication is required. Please log in again.');
+});
+
+// --- Theme Toggle Functionality ---
+function updateThemeButton(theme) {
+  if (theme === 'dark') {
+    themeToggleBtn.textContent = '☀️';
+    themeToggleBtn.title = 'Switch to light mode';
+  } else {
+    themeToggleBtn.textContent = '🌙';
+    themeToggleBtn.title = 'Switch to dark mode';
+  }
+}
+
+// Initialize theme button with current theme
+updateThemeButton(window.themeManager.getCurrentTheme());
+
+// Listen for theme changes
+window.themeManager.addThemeChangeListener((newTheme) => {
+  updateThemeButton(newTheme);
+  console.log(`Theme changed to: ${newTheme}`);
+});
+
+// Theme toggle button event listeners
+themeToggleBtn.addEventListener('click', () => {
+  const newTheme = window.themeManager.toggleTheme();
+  console.log(`Theme toggled to: ${newTheme}`);
+});
+
+// Keyboard accessibility for theme toggle
+themeToggleBtn.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    const newTheme = window.themeManager.toggleTheme();
+    console.log(`Theme toggled via keyboard to: ${newTheme}`);
+  }
 });
 
 // --- Initial Setup ---

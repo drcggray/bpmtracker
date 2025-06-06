@@ -29,12 +29,8 @@ class TrackService {
         throw new Error(playbackState.error.details || playbackState.error.error || playbackState.error.message);
       }
       
-      if (!playbackState || !playbackState.item) {
-        console.log('[DEBUG] No item currently playing or playbackState is null/undefined.');
-        return { name: 'Nothing playing or private session.', artist: '', bpm: 'N/A', albumArt: null };
-      }
-
-      if (playbackState.is_playing && playbackState.item) {
+      // Check if we have track data, regardless of playing state
+      if (playbackState && playbackState.item) {
         const track = playbackState.item;
         const trackName = track.name;
         const mainArtistName = track.artists && track.artists.length > 0 ? track.artists[0].name : 'Unknown Artist';
@@ -62,14 +58,29 @@ class TrackService {
           artist: track.artists.map(artist => artist.name).join(', '),
           bpm: bpm,
           albumArt: track.album && track.album.images && track.album.images.length > 0 ? track.album.images[0].url : null,
-          trackIdForBpm: track.id
+          trackIdForBmp: track.id,
+          is_playing: playbackState.is_playing || false,
+          last_played_at: Date.now()
         };
+        
+        // Cache as last played track (persist across pauses)
+        cacheService.set('lastPlayed', 'current', result);
         
         console.log('[DEBUG] getCurrentlyPlaying SUCCESS, returning:', JSON.stringify(result, null, 2));
         return result;
       }
       
-      return { name: 'Nothing actively playing.', artist: '', bpm: 'N/A', albumArt: null };
+      // No current track - try to get last played from cache
+      const lastPlayed = cacheService.get('lastPlayed', 'current');
+      if (lastPlayed) {
+        console.log('[DEBUG] No current track, returning last played:', lastPlayed.name);
+        return {
+          ...lastPlayed,
+          is_playing: false // Ensure we show it as paused
+        };
+      }
+      
+      return { name: 'Nothing playing or private session.', artist: '', bpm: 'N/A', albumArt: null, is_playing: false };
 
     } catch (error) {
       console.error('Error in getCurrentlyPlaying:', error);

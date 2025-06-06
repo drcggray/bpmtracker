@@ -3,6 +3,7 @@
 
 const SpotifyWebApi = require('spotify-web-api-node');
 const config = require('../utils/config-loader');
+const cacheService = require('../services/cache-service');
 
 class SpotifyAuth {
   constructor() {
@@ -103,6 +104,8 @@ class SpotifyAuth {
       }
     } catch (error) {
       console.error('Could not refresh user access token', error);
+      // Clear last played when auth fails
+      cacheService.delete('lastPlayed', 'current');
       if (this.mainWindow) {
         this.mainWindow.webContents.send('spotify:auth-required');
       }
@@ -125,6 +128,9 @@ class SpotifyAuth {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
     }
+    // Clear last played track when logging out
+    cacheService.delete('lastPlayed', 'current');
+    console.log('[SpotifyAuth] Cleared last played track cache');
   }
 }
 
