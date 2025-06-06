@@ -48,12 +48,21 @@ body {
 
 .main-content {
   flex: 1;
-  padding: 20px;
+  padding: max(15px, 3vw); /* Minimum 15px margins at all times */
   display: flex;
   flex-direction: column;
   align-items: center; /* Center content horizontally */
   text-align: center; /* Center text within elements */
   overflow-y: auto;
+  min-height: 100vh;
+  justify-content: flex-start;
+  box-sizing: border-box; /* Include padding in width calculations */
+}
+
+/* When lyrics panel is open, add side margin to main content */\n/* Use a more reliable selector for when lyrics are visible */\n.app-container .main-content {\n  padding-left: 30px; /* Add space from left edge when lyrics visible */\n  padding-right: 20px; /* Add space between tiles and lyrics panel */\n}\n\n/* When lyrics are hidden, remove extra padding */\n.main-content:has(~ .lyrics-panel.lyrics-hidden) {\n  padding-left: 20px;\n  padding-right: 20px;\n}\n\n/* Legacy selector for browsers that don't support :has() */
+.app-container:not(.lyrics-hidden) .main-content {
+  padding-right: 30px; /* Add space between tiles and lyrics panel */
+  margin-right: 20px;
 }
 
 .lyrics-panel {
@@ -177,25 +186,107 @@ h2 {
   transition: color 0.3s ease;
 }
 
+/* Base styles for song info tiles */
 div#current-song-info,
 div#next-song-info {
   background-color: var(--bg-secondary);
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px var(--shadow-light);
-  margin-bottom: 25px;
-  width: 80%;
-  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 2px 15px var(--shadow-light);
   text-align: left;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease, border-left 0.3s ease;
+  transition: all 0.3s ease;
   border-left: 4px solid transparent;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start;
+  gap: clamp(8px, 1.5vw, 24px);
+  width: calc(100% - 30px); /* Ensure minimum margins */
+  max-width: 800px;
+  min-height: 100px;
+  overflow: hidden; /* Prevent content overflow */
+  box-sizing: border-box; /* Include padding in width calculations */
+  flex-shrink: 0; /* Prevent flex from causing overflow */
 }
 
-div#current-song-info p,
+/* Now Playing tile - larger and more prominent */
+div#current-song-info {
+  height: clamp(140px, 25vw, 350px); /* Height scales with window width */
+  padding: clamp(12px, 2vw, 32px);
+  margin-bottom: clamp(20px, 4vw, 80px); /* Gap scales with window width */
+  border: 2px solid var(--border-primary);
+}
+
+/* Up Next tile - smaller height but same width */
+div#next-song-info {
+  height: clamp(100px, 18vw, 250px); /* Height scales with window width */
+  padding: clamp(12px, 2vw, 32px);
+  padding-bottom: max(30px, 4vw); /* Increased minimum bottom padding */
+  margin-bottom: clamp(20px, 4vw, 60px); /* Gap scales with window width */
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  opacity: 0.95;
+}
+
+/* Album art container */
+.album-art-container {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: auto;
+  min-width: 0; /* Allow shrinking */
+  max-width: 30%; /* Prevent pushing content out */
+}
+
+/* Album art styling */
+#current-song-art {
+  width: clamp(80px, 15vw, 180px); /* Larger for taller tiles */
+  height: clamp(80px, 15vw, 180px);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  object-fit: cover;
+  border: 1px solid var(--border-primary);
+}
+
+#next-song-art {
+  width: clamp(60px, 12vw, 120px); /* Larger for taller tiles */
+  height: clamp(60px, 12vw, 120px);
+  border-radius: 6px;
+  box-shadow: 0 1px 4px var(--shadow-subtle);
+  object-fit: cover;
+  border: 1px solid var(--border-primary);
+}
+
+/* Text content container */
+.text-content {
+  flex: 1;
+  min-width: 0; /* Allow text to wrap */
+  overflow: hidden; /* Prevent text overflow */
+  word-wrap: break-word;
+}
+
+/* Responsive text sizing for song info - linear scaling with width */
+div#current-song-info p {
+  font-size: clamp(16px, 2.8vw, 28px);
+  line-height: 1.5;
+  margin: clamp(8px, 1.5vw, 18px) 0; /* Margin scales with width */
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 div#next-song-info p {
-  font-size: 16px;
-  line-height: 1.6;
-  margin: 8px 0;
+  font-size: clamp(14px, 2.2vw, 22px);
+  line-height: 1.4;
+  margin: clamp(6px, 1.2vw, 15px) 0; /* Margin scales with width */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Extra bottom margin for last paragraph in Up Next tile */
+div#next-song-info p:last-child {
+  margin-bottom: clamp(15px, 3vw, 30px); /* Ensure spacing from bottom edge */
 }
 
 span {
@@ -204,39 +295,35 @@ span {
   transition: color 0.3s ease;
 }
 
-/* Specific styling for current song to make it stand out more */
+/* Now Playing tile - enhanced styling */
 div#current-song-info h2 {
   color: var(--text-primary);
+  font-size: clamp(20px, 3.5vw, 36px);
+  margin-bottom: clamp(12px, 2vw, 24px); /* Margin scales with width */
+  margin-top: 0;
+  font-weight: 600;
   transition: color 0.3s ease;
-}
-
-div#current-song-info p {
-  font-size: 18px;
 }
 
 div#current-song-info span {
   color: var(--accent-hover);
+  font-weight: 600;
   transition: color 0.3s ease;
 }
 
-/* Styling for the "Up Next" section to be a bit more subdued */
-div#next-song-info {
-  background-color: var(--bg-tertiary);
-  box-shadow: 0 1px 5px var(--shadow-subtle);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
-
+/* Up Next tile - subtle styling */
 div#next-song-info h2 {
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
+  font-size: clamp(18px, 2.8vw, 28px);
+  margin-bottom: clamp(10px, 1.5vw, 20px); /* Margin scales with width */
+  margin-top: 0;
+  font-weight: 500;
   transition: color 0.3s ease;
-}
-
-div#next-song-info p {
-  font-size: 15px;
 }
 
 div#next-song-info span {
   color: var(--accent-primary);
+  font-weight: 500;
   transition: color 0.3s ease;
 }
 
@@ -290,6 +377,26 @@ div#next-song-info span {
   outline-offset: 2px;
 }
 
+/* Hide album art at small window sizes */
+@media (max-width: 500px) {
+  .album-art-container {
+    display: none;
+  }
+}
+
+/* Intermediate screen sizes */
+@media (max-width: 1024px) {
+  div#current-song-info,
+  div#next-song-info {
+    width: calc(100% - 30px); /* Maintain minimum margins */
+    max-width: 700px;
+  }
+  
+  .album-art-container {
+    max-width: 25%; /* Less restrictive on tablets */
+  }
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .app-container {
@@ -299,6 +406,7 @@ div#next-song-info span {
   .main-content {
     width: 100%;
     height: 60%;
+    padding: max(15px, 3vw); /* Maintain minimum 15px padding */
   }
   
   .lyrics-panel {
@@ -317,13 +425,52 @@ div#next-song-info span {
     height: 100%;
   }
   
+  /* Mobile tile sizing */
   div#current-song-info,
   div#next-song-info {
-    width: 90%;
+    width: 95%;
+    gap: 12px;
+    padding: 16px;
+    flex-direction: row !important; /* Ensure horizontal layout on mobile too */
+  }
+  
+  div#current-song-info {
+    height: clamp(120px, 20vh, 200px);
+    margin-bottom: 20px;
+  }
+  
+  div#next-song-info {
+    height: clamp(100px, 16vh, 160px);
+    padding: 12px;
+  }
+  
+  .album-art-container {
+    align-items: flex-start;
+  }
+  
+  /* Smaller font sizes on mobile */
+  div#current-song-info h2 {
+    font-size: clamp(14px, 4vw, 18px);
+    margin-bottom: 6px;
+  }
+  
+  div#next-song-info h2 {
+    font-size: clamp(12px, 3.5vw, 16px);
+    margin-bottom: 4px;
+  }
+  
+  div#current-song-info p {
+    font-size: clamp(12px, 3vw, 16px);
+    margin: 2px 0;
+  }
+  
+  div#next-song-info p {
+    font-size: clamp(10px, 2.5vw, 14px);
+    margin: 2px 0;
   }
   
   .header-controls {
-    max-width: 90%;
+    max-width: 95%;
   }
   
   .header-buttons {
@@ -335,4 +482,17 @@ div#next-song-info span {
     font-size: 12px;
     padding: 6px 12px;
   }
+}
+
+
+/* Improved spacing when lyrics panel is visible */
+.app-container .main-content {
+  padding-left: max(15px, 3vw) !important; /* Respect minimum margins */
+  padding-right: max(15px, 3vw) !important;
+}
+
+/* Reset padding when lyrics are hidden */
+.main-content:has(~ .lyrics-panel.lyrics-hidden) {
+  padding-left: max(15px, 3vw) !important; /* Maintain minimum margins */
+  padding-right: max(15px, 3vw) !important;
 }

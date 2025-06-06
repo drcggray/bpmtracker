@@ -11,27 +11,16 @@ const lyricsContent = document.getElementById('lyrics-content');
 const lyricsToggleBtn = document.getElementById('lyrics-toggle');
 const themeToggleBtn = document.getElementById('theme-toggle');
 
+// Get all DOM element references
 const currentSongNameEl = document.getElementById('current-song-name');
 const currentSongArtistEl = document.getElementById('current-song-artist');
 const currentSongBpmEl = document.getElementById('current-song-bpm');
-// Let's add an element for album art for the current song
-const currentSongArtEl = document.createElement('img');
-currentSongArtEl.id = 'current-song-art';
-currentSongArtEl.style.maxWidth = '100px'; // Basic styling
-currentSongArtEl.style.maxHeight = '100px';
-currentSongArtEl.style.marginTop = '10px';
-currentSongInfoDiv.appendChild(currentSongArtEl); // Add it to the div
+const currentSongArtEl = document.getElementById('current-song-art');
 
 const nextSongNameEl = document.getElementById('next-song-name');
 const nextSongArtistEl = document.getElementById('next-song-artist');
 const nextSongBpmEl = document.getElementById('next-song-bpm');
-// And for the next song's album art
-const nextSongArtEl = document.createElement('img');
-nextSongArtEl.id = 'next-song-art';
-nextSongArtEl.style.maxWidth = '80px';
-nextSongArtEl.style.maxHeight = '80px';
-nextSongArtEl.style.marginTop = '8px';
-nextSongInfoDiv.appendChild(nextSongArtEl);
+const nextSongArtEl = document.getElementById('next-song-art');
 
 let isAuthenticated = false;
 let dataFetchInterval = null;
@@ -73,8 +62,12 @@ async function fetchCurrentlyPlaying() {
       currentSongNameEl.textContent = (data.name || '--') + pausedIndicator;
       currentSongArtistEl.textContent = data.artist || '--';
       currentSongBpmEl.textContent = data.bpm ? `${data.bpm} BPM` : '--';
-      currentSongArtEl.src = data.albumArt || '';
-      currentSongArtEl.style.display = data.albumArt ? 'block' : 'none';
+      if (data.albumArt) {
+        currentSongArtEl.src = data.albumArt;
+        currentSongArtEl.style.display = 'block';
+      } else {
+        currentSongArtEl.style.display = 'none';
+      }
       
       // Add visual styling for paused state
       if (data.is_playing === false) {
@@ -103,7 +96,6 @@ async function fetchCurrentlyPlaying() {
       currentSongNameEl.textContent = data && data.name ? data.name : 'Error or nothing playing'; // Display 'Nothing playing' if applicable
       currentSongArtistEl.textContent = '--';
       currentSongBpmEl.textContent = '--';
-      currentSongArtEl.src = '';
       currentSongArtEl.style.display = 'none';
       
       // Clear lyrics when nothing is playing
@@ -130,14 +122,17 @@ async function fetchQueue() {
       nextSongNameEl.textContent = data.name || '--';
       nextSongArtistEl.textContent = data.artist || '--';
       nextSongBpmEl.textContent = data.bpm ? `${data.bpm} BPM` : '--';
-      nextSongArtEl.src = data.albumArt || '';
-      nextSongArtEl.style.display = data.albumArt ? 'block' : 'none';
+      if (data.albumArt) {
+        nextSongArtEl.src = data.albumArt;
+        nextSongArtEl.style.display = 'block';
+      } else {
+        nextSongArtEl.style.display = 'none';
+      }
     } else {
       console.error('Error fetching queue from main:', data ? data.error : 'Unknown error');
       nextSongNameEl.textContent = data && data.name ? data.name : 'Queue empty or error'; // Display 'Queue empty' if applicable
       nextSongArtistEl.textContent = '--';
       nextSongBpmEl.textContent = '--';
-      nextSongArtEl.src = '';
       nextSongArtEl.style.display = 'none';
       if (data && data.error === 'Not authenticated') showLoginView();
     }
