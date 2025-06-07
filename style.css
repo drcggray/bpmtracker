@@ -59,7 +59,20 @@ body {
   box-sizing: border-box; /* Include padding in width calculations */
 }
 
-/* When lyrics panel is open, add side margin to main content */\n/* Use a more reliable selector for when lyrics are visible */\n.app-container .main-content {\n  padding-left: 30px; /* Add space from left edge when lyrics visible */\n  padding-right: 20px; /* Add space between tiles and lyrics panel */\n}\n\n/* When lyrics are hidden, remove extra padding */\n.main-content:has(~ .lyrics-panel.lyrics-hidden) {\n  padding-left: 20px;\n  padding-right: 20px;\n}\n\n/* Legacy selector for browsers that don't support :has() */
+/* When lyrics panel is open, add side margin to main content */
+/* Use a more reliable selector for when lyrics are visible */
+.app-container .main-content {
+  padding-left: 30px; /* Add space from left edge when lyrics visible */
+  padding-right: 20px; /* Add space between tiles and lyrics panel */
+}
+
+/* When lyrics are hidden, remove extra padding */
+.main-content:has(~ .lyrics-panel.lyrics-hidden) {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+/* Legacy selector for browsers that don't support :has() */
 .app-container:not(.lyrics-hidden) .main-content {
   padding-right: 30px; /* Add space between tiles and lyrics panel */
   margin-right: 20px;
