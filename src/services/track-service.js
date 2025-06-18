@@ -84,7 +84,6 @@ class TrackService {
         // Cache as last played track (persist across pauses)
         cacheService.set('lastPlayed', 'current', result);
         
-        console.log('[DEBUG] getCurrentlyPlaying SUCCESS, returning:', JSON.stringify(result, null, 2));
         return result;
       }
       
@@ -113,7 +112,6 @@ class TrackService {
 
     try {
       const queueApiResponse = await spotifyClient.fetchQueue(this.accessToken);
-      console.log('[DEBUG] Raw response from fetchQueue:', JSON.stringify(queueApiResponse, null, 2));
 
       if (queueApiResponse && queueApiResponse.error) {
         console.error('Error returned from fetchQueue:', queueApiResponse.error);

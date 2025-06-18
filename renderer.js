@@ -15,11 +15,13 @@ const themeToggleBtn = document.getElementById('theme-toggle');
 const currentSongNameEl = document.getElementById('current-song-name');
 const currentSongArtistEl = document.getElementById('current-song-artist');
 const currentSongBpmEl = document.getElementById('current-song-bpm');
+const currentSongBpmContainer = currentSongBpmEl.parentElement; // The <p> element containing "BPM:"
 const currentSongArtEl = document.getElementById('current-song-art');
 
 const nextSongNameEl = document.getElementById('next-song-name');
 const nextSongArtistEl = document.getElementById('next-song-artist');
 const nextSongBpmEl = document.getElementById('next-song-bpm');
+const nextSongBpmContainer = nextSongBpmEl.parentElement; // The <p> element containing "BPM:"
 const nextSongArtEl = document.getElementById('next-song-art');
 
 let isAuthenticated = false;
@@ -55,14 +57,13 @@ async function fetchCurrentlyPlaying() {
   console.log('Renderer: Requesting currently playing song...');
   try {
     const data = await window.spotify.getCurrentlyPlaying();
-    console.log('[DEBUG] Renderer received for current song:', JSON.stringify(data, null, 2)); // Added log
     if (data && !data.error) {
       // Show paused indicator if not playing
       const pausedIndicator = data.is_playing === false ? ' ⏸️' : '';
       currentSongNameEl.textContent = (data.name || '--') + pausedIndicator;
       currentSongArtistEl.textContent = data.artist || '--';
       if (data.bpm) {
-        let bpmText = `${data.bpm} BPM`;
+        let bpmText = `${data.bpm}`;
         if (data.bpmSource) {
           const sourceLabel = data.bpmSource === 'acousticbrainz' ? 'MB' : 'GSB';
           const sourceFullName = data.bpmSource === 'acousticbrainz' ? 'MusicBrainz/AcousticBrainz' : 'GetSongBPM';
@@ -72,9 +73,9 @@ async function fetchCurrentlyPlaying() {
           currentSongBpmEl.title = '';
         }
         currentSongBpmEl.textContent = bpmText;
+        currentSongBpmContainer.style.display = 'block'; // Show the entire BPM line
       } else {
-        currentSongBpmEl.textContent = '--';
-        currentSongBpmEl.title = '';
+        currentSongBpmContainer.style.display = 'none'; // Hide the entire BPM line
       }
       if (data.albumArt) {
         currentSongArtEl.src = data.albumArt;
@@ -109,7 +110,7 @@ async function fetchCurrentlyPlaying() {
       console.error('Error fetching current song from main:', data ? data.error : 'Unknown error');
       currentSongNameEl.textContent = data && data.name ? data.name : 'Error or nothing playing'; // Display 'Nothing playing' if applicable
       currentSongArtistEl.textContent = '--';
-      currentSongBpmEl.textContent = '--';
+      currentSongBpmContainer.style.display = 'none'; // Hide BPM line when no data
       currentSongArtEl.style.display = 'none';
       
       // Clear lyrics when nothing is playing
@@ -136,7 +137,7 @@ async function fetchQueue() {
       nextSongNameEl.textContent = data.name || '--';
       nextSongArtistEl.textContent = data.artist || '--';
       if (data.bpm) {
-        let bpmText = `${data.bpm} BPM`;
+        let bpmText = `${data.bpm}`;
         if (data.bpmSource) {
           const sourceLabel = data.bpmSource === 'acousticbrainz' ? 'MB' : 'GSB';
           const sourceFullName = data.bpmSource === 'acousticbrainz' ? 'MusicBrainz/AcousticBrainz' : 'GetSongBPM';
@@ -146,9 +147,9 @@ async function fetchQueue() {
           nextSongBpmEl.title = '';
         }
         nextSongBpmEl.textContent = bpmText;
+        nextSongBpmContainer.style.display = 'block'; // Show the entire BPM line
       } else {
-        nextSongBpmEl.textContent = '--';
-        nextSongBpmEl.title = '';
+        nextSongBpmContainer.style.display = 'none'; // Hide the entire BPM line
       }
       if (data.albumArt) {
         nextSongArtEl.src = data.albumArt;
@@ -160,7 +161,7 @@ async function fetchQueue() {
       console.error('Error fetching queue from main:', data ? data.error : 'Unknown error');
       nextSongNameEl.textContent = data && data.name ? data.name : 'Queue empty or error'; // Display 'Queue empty' if applicable
       nextSongArtistEl.textContent = '--';
-      nextSongBpmEl.textContent = '--';
+      nextSongBpmContainer.style.display = 'none'; // Hide BPM line when no data
       nextSongArtEl.style.display = 'none';
       if (data && data.error === 'Not authenticated') showLoginView();
     }

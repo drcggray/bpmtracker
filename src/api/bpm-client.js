@@ -6,7 +6,7 @@ const config = require('../utils/config-loader');
 
 class BpmClient {
   constructor() {
-    this.baseUrl = 'api.getsongbpm.com';
+    this.baseUrl = 'api.getsong.co';
     this.apiKey = null;
   }
 
@@ -16,6 +16,7 @@ class BpmClient {
     }
     return this.apiKey;
   }
+
 
   async fetchBpm(trackName, artistName) {
     if (!trackName || !artistName) {
@@ -29,7 +30,7 @@ class BpmClient {
       return { error: 'GetSongBPM API Key is not configured' };
     }
 
-    // First try searching by song title only
+    // Search by track name only, then filter by artist in results
     const searchQuery = encodeURIComponent(trackName);
     
     console.log(`[GetSongBPM] Searching for: "${trackName}" by "${artistName}"`);
