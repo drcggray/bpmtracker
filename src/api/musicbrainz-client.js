@@ -2,13 +2,14 @@
 // ABOUTME: Implements rate limiting and proper query formatting for artist/track searches
 
 const https = require('https');
+const CONSTANTS = require('../utils/constants');
 
 class MusicBrainzClient {
   constructor() {
-    this.baseUrl = 'musicbrainz.org';
+    this.baseUrl = CONSTANTS.APIS.MUSICBRAINZ_BASE_URL;
     this.lastRequestTime = 0;
-    this.minRequestInterval = 1000; // 1 second rate limit
-    this.userAgent = 'SpotifyBPMViewer/1.0 (https://github.com/yourusername/spotify-bpm-viewer)';
+    this.minRequestInterval = CONSTANTS.MUSICBRAINZ.RATE_LIMIT_MS;
+    this.userAgent = CONSTANTS.MUSICBRAINZ.USER_AGENT;
   }
 
   async enforceRateLimit() {
@@ -39,7 +40,7 @@ class MusicBrainzClient {
     console.log(`[MusicBrainz] Searching for: "${trackName}" by "${artistName}"`);
     console.log(`[MusicBrainz] Query: ${query}`);
     
-    const fullPath = `/ws/2/recording?query=${encodedQuery}&fmt=json&limit=5`;
+    const fullPath = `/ws/2/recording?query=${encodedQuery}&fmt=json&limit=${CONSTANTS.MUSICBRAINZ.SEARCH_LIMIT}`;
     console.log(`[MusicBrainz] Requesting: https://${this.baseUrl}${fullPath}`);
 
     return new Promise((resolve) => {

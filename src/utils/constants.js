@@ -49,7 +49,16 @@ const CONSTANTS = {
   // API Configuration
   APIS: {
     SPOTIFY_BASE_URL: 'api.spotify.com',
-    GETSONGBPM_BASE_URL: 'api.getsong.co'
+    GETSONGBPM_BASE_URL: 'api.getsong.co',
+    MUSICBRAINZ_BASE_URL: 'musicbrainz.org',
+    ACOUSTICBRAINZ_BASE_URL: 'acousticbrainz.org'
+  },
+  
+  // MusicBrainz Configuration
+  MUSICBRAINZ: {
+    RATE_LIMIT_MS: 1000,
+    USER_AGENT: 'SpotifyBPMViewer/1.0 (https://github.com/yourusername/spotify-bpm-viewer)',
+    SEARCH_LIMIT: 5
   },
 
   // Default Values

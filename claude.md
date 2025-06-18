@@ -5,6 +5,7 @@
 - YOU MUST ALWAYS address me as "George" in all communications.
 - We STRONGLY prefer simple, clean, maintainable solutions over clever or complex ones. Readability and maintainability are PRIMARY CONCERNS, even at the cost of conciseness or performance.
 - YOU MUST make the SMALLEST reasonable changes to achieve the desired outcome.
+- Aim to keep files sizes to no more than 300-400 lines, and if you need more lines in a file think about refactoring.
 - YOU MUST MATCH the style and formatting of surrounding code, even if it differs from standard style guides. Consistency within a file trumps external standards.
 - YOU MUST NEVER make code changes unrelated to your current task. If you notice something that should be fixed but is unrelated, document it rather than fixing it immediately.
 - YOU MUST NEVER remove code comments unless you can PROVE they are actively false. Comments are important documentation and must be preserved.

@@ -509,3 +509,25 @@ div#next-song-info span {
   padding-left: max(15px, 3vw) !important; /* Maintain minimum margins */
   padding-right: max(15px, 3vw) !important;
 }
+
+/* BPM source indicator styling */
+#current-song-bpm,
+#next-song-bpm {
+  position: relative;
+  display: inline-block;
+}
+
+/* Style for the source indicator */
+#current-song-bpm:has-text("(MB)"),
+#next-song-bpm:has-text("(MB)"),
+#current-song-bpm:has-text("(GSB)"),
+#next-song-bpm:has-text("(GSB)") {
+  cursor: help;
+}
+
+/* Add hover effect for BPM with source */
+#current-song-bpm:hover,
+#next-song-bpm:hover {
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}

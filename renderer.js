@@ -61,7 +61,21 @@ async function fetchCurrentlyPlaying() {
       const pausedIndicator = data.is_playing === false ? ' ⏸️' : '';
       currentSongNameEl.textContent = (data.name || '--') + pausedIndicator;
       currentSongArtistEl.textContent = data.artist || '--';
-      currentSongBpmEl.textContent = data.bpm ? `${data.bpm} BPM` : '--';
+      if (data.bpm) {
+        let bpmText = `${data.bpm} BPM`;
+        if (data.bpmSource) {
+          const sourceLabel = data.bpmSource === 'acousticbrainz' ? 'MB' : 'GSB';
+          const sourceFullName = data.bpmSource === 'acousticbrainz' ? 'MusicBrainz/AcousticBrainz' : 'GetSongBPM';
+          bpmText += ` (${sourceLabel})`;
+          currentSongBpmEl.title = `BPM source: ${sourceFullName}`;
+        } else {
+          currentSongBpmEl.title = '';
+        }
+        currentSongBpmEl.textContent = bpmText;
+      } else {
+        currentSongBpmEl.textContent = '--';
+        currentSongBpmEl.title = '';
+      }
       if (data.albumArt) {
         currentSongArtEl.src = data.albumArt;
         currentSongArtEl.style.display = 'block';
@@ -121,7 +135,21 @@ async function fetchQueue() {
     if (data && !data.error) {
       nextSongNameEl.textContent = data.name || '--';
       nextSongArtistEl.textContent = data.artist || '--';
-      nextSongBpmEl.textContent = data.bpm ? `${data.bpm} BPM` : '--';
+      if (data.bpm) {
+        let bpmText = `${data.bpm} BPM`;
+        if (data.bpmSource) {
+          const sourceLabel = data.bpmSource === 'acousticbrainz' ? 'MB' : 'GSB';
+          const sourceFullName = data.bpmSource === 'acousticbrainz' ? 'MusicBrainz/AcousticBrainz' : 'GetSongBPM';
+          bpmText += ` (${sourceLabel})`;
+          nextSongBpmEl.title = `BPM source: ${sourceFullName}`;
+        } else {
+          nextSongBpmEl.title = '';
+        }
+        nextSongBpmEl.textContent = bpmText;
+      } else {
+        nextSongBpmEl.textContent = '--';
+        nextSongBpmEl.title = '';
+      }
       if (data.albumArt) {
         nextSongArtEl.src = data.albumArt;
         nextSongArtEl.style.display = 'block';

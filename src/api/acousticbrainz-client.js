@@ -2,10 +2,11 @@
 // ABOUTME: Retrieves tempo information using MusicBrainz recording IDs (MBIDs)
 
 const https = require('https');
+const CONSTANTS = require('../utils/constants');
 
 class AcousticBrainzClient {
   constructor() {
-    this.baseUrl = 'acousticbrainz.org';
+    this.baseUrl = CONSTANTS.APIS.ACOUSTICBRAINZ_BASE_URL;
   }
 
   async fetchBpmByMbid(mbid) {

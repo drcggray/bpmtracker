@@ -6,7 +6,7 @@ const config = require('../utils/config-loader');
 
 class BpmClient {
   constructor() {
-    this.baseUrl = 'api.getsong.co';
+    this.baseUrl = 'api.getsongbpm.com';
     this.apiKey = null;
   }
 
@@ -29,13 +29,12 @@ class BpmClient {
       return { error: 'GetSongBPM API Key is not configured' };
     }
 
-    const trackNameForApi = encodeURIComponent(trackName).replace(/%20/g, '+');
-    const artistNameForApi = encodeURIComponent(artistName).replace(/%20/g, '+');
-    const lookupParamValue = `song:${trackNameForApi}+artist:${artistNameForApi}`;
+    // First try searching by song title only
+    const searchQuery = encodeURIComponent(trackName);
     
-    console.log(`[GetSongBPM] Fetching BPM using type=both for: "${trackName}" by "${artistName}". Lookup: "${lookupParamValue}"`);
+    console.log(`[GetSongBPM] Searching for: "${trackName}" by "${artistName}"`);
     
-    const fullPath = `/search/?api_key=${apiKey}&type=both&limit=1&lookup=${encodeURIComponent(lookupParamValue)}`;
+    const fullPath = `/search/?api_key=${apiKey}&type=song&lookup=${searchQuery}`;
     console.log(`[GetSongBPM] Requesting Path: https://${this.baseUrl}${fullPath}`);
 
     return new Promise((resolve) => {
@@ -56,33 +55,65 @@ class BpmClient {
           try {
             if (res.statusCode === 200) {
               const parsedData = JSON.parse(data);
-              if (parsedData.search && parsedData.search.length > 0) {
-                const foundSong = parsedData.search[0];
-                if (foundSong.tempo) {
-                  let artistMatchQuality = 'none';
-                  if (foundSong.artist && foundSong.artist.name) {
-                    if (foundSong.artist.name.toLowerCase() === artistName.toLowerCase()) {
-                      artistMatchQuality = 'exact';
-                    } else if (foundSong.artist.name.toLowerCase().includes(artistName.toLowerCase()) || 
-                               artistName.toLowerCase().includes(foundSong.artist.name.toLowerCase())) {
-                      artistMatchQuality = 'partial';
+              
+              // Handle search results
+              if (parsedData.search && Array.isArray(parsedData.search) && parsedData.search.length > 0) {
+                // Find the best match by artist name
+                let bestMatch = null;
+                let bestScore = 0;
+                
+                for (const song of parsedData.search) {
+                  let score = 0;
+                  
+                  // Check if song has tempo data
+                  if (!song.tempo) continue;
+                  
+                  // Check artist match
+                  if (song.artist && song.artist.name) {
+                    const songArtist = song.artist.name.toLowerCase();
+                    const searchArtist = artistName.toLowerCase();
+                    
+                    if (songArtist === searchArtist) {
+                      score += 10; // Exact match
+                    } else if (songArtist.includes(searchArtist) || searchArtist.includes(songArtist)) {
+                      score += 5; // Partial match
                     }
                   }
                   
-                  const bpm = Math.round(parseFloat(foundSong.tempo));
-                  console.log(`[GetSongBPM] Success: Found BPM ${bpm} for "${foundSong.title}" by "${foundSong.artist ? foundSong.artist.name : 'Unknown Artist'}". Artist match: ${artistMatchQuality}.`);
+                  // Check title match
+                  if (song.title) {
+                    const songTitle = song.title.toLowerCase();
+                    const searchTitle = trackName.toLowerCase();
+                    
+                    if (songTitle === searchTitle) {
+                      score += 10; // Exact match
+                    } else if (songTitle.includes(searchTitle) || searchTitle.includes(songTitle)) {
+                      score += 5; // Partial match
+                    }
+                  }
+                  
+                  if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = song;
+                  }
+                }
+                
+                if (bestMatch && bestMatch.tempo) {
+                  const bpm = Math.round(parseFloat(bestMatch.tempo));
+                  const foundArtistName = bestMatch.artist ? bestMatch.artist.name : 'Unknown Artist';
+                  console.log(`[GetSongBPM] Success: Found BPM ${bpm} for "${bestMatch.title}" by "${foundArtistName}". Score: ${bestScore}`);
                   resolve({ bpm });
                 } else {
-                  console.warn(`[GetSongBPM] Song found for "${trackName}" ("${foundSong.title}"), but no tempo data.`);
-                  resolve({ error: 'Song found, but no tempo data in GetSongBPM response' });
+                  console.warn(`[GetSongBPM] No suitable matches found for "${trackName}" by "${artistName}"`);
+                  resolve({ error: 'No suitable matches found in GetSongBPM response' });
                 }
+              } else if (parsedData.search && parsedData.search.error) {
+                console.warn(`[GetSongBPM] Search error: ${parsedData.search.error}`);
+                resolve({ error: 'No results found in GetSongBPM response' });
               } else {
-                console.warn(`[GetSongBPM] No results found for lookup "${lookupParamValue}":`, parsedData.search || parsedData);
+                console.warn(`[GetSongBPM] No results found for "${trackName}"`);
                 resolve({ error: 'No results found in GetSongBPM response' });
               }
-            } else if (parsedData && parsedData.error) {
-              console.error(`[GetSongBPM] API returned error for "${lookupParamValue}": ${parsedData.error}`);
-              resolve({ error: `GetSongBPM API error: ${parsedData.error}` });
             } else {
               console.error(`[GetSongBPM] Error: Status ${res.statusCode}`, data);
               resolve({ error: { message: `GetSongBPM API error: ${res.statusCode}`, details: data, statusCode: res.statusCode } });
